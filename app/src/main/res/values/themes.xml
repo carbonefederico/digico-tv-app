@@ -1,0 +1,4 @@
+<resources>
+
+    <style name="Theme.DigiCoTVApp" parent="@style/Theme.Leanback" />
+</resources>
