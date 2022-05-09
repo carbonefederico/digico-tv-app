@@ -1,7 +1,11 @@
 package com.pingidentity.emeasa.tvappsample;
 
+import android.app.Application;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.net.http.SslError;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
 import android.webkit.JavascriptInterface;
@@ -27,9 +31,11 @@ import org.json.JSONObject;
  */
 public class MainActivity extends FragmentActivity {
 
+    private final String FIRSTNAME = "firstname";
+    private final String LOGGED_IN = "loggedIn";
+
 
     FrameLayout startLayout, loginLayout, userLayout, contentLayout;
-    String givenName = "";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -39,8 +45,8 @@ public class MainActivity extends FragmentActivity {
         loginLayout = (FrameLayout ) findViewById(R.id.loginFrame);
         contentLayout = (FrameLayout ) findViewById(R.id.contentFrame);
         userLayout = (FrameLayout ) findViewById(R.id.userFrame);
-       Button startButton = (Button) findViewById(R.id.startButton);
-       startButton.setOnClickListener(new View.OnClickListener() {
+        Button startButton = (Button) findViewById(R.id.startButton);
+        startButton.setOnClickListener(new View.OnClickListener() {
            
            @Override
            public void onClick(View v) {
@@ -54,13 +60,15 @@ public class MainActivity extends FragmentActivity {
 
             @Override
             public void onClick(View v) {
-                startLayout.setVisibility(View.VISIBLE);
-                loginLayout.setVisibility(View.GONE);
-                contentLayout.setVisibility(View.GONE);
-                userLayout.setVisibility(View.GONE);
-                givenName = null;
+                logoutUser();
             }
         });
+
+
+        SharedPreferences sharedPreferences = this.getPreferences(Context.MODE_PRIVATE);
+        if(sharedPreferences.getBoolean(LOGGED_IN, false)) {
+            logInUser(sharedPreferences.getString (FIRSTNAME, ""));
+        }
     }
 
     private void loadWebView() {
@@ -80,22 +88,39 @@ public class MainActivity extends FragmentActivity {
     @JavascriptInterface
     public void handleLoginResponse(String payload) throws JSONException {
         Log.i("Main", payload);
-        givenName = payload;
 
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                logInUser(givenName);
+                logInUser(payload);
             }
         });
     }
 
-    private void logInUser(String email) {
+    private void logInUser(String firstName) {
         TextView emailText = (TextView) findViewById(R.id.emailText);
-        emailText.setText(email);
+        emailText.setText(firstName);
         loginLayout.setVisibility(View.GONE);
         startLayout.setVisibility(View.GONE);
         userLayout.setVisibility(View.VISIBLE);
         contentLayout.setVisibility(View.VISIBLE);
+        SharedPreferences sharedPreferences = this.getPreferences(Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(FIRSTNAME, firstName);
+        editor.putBoolean(LOGGED_IN, true);
+        editor.apply();
+    }
+
+    private void logoutUser () {
+        startLayout.setVisibility(View.VISIBLE);
+        loginLayout.setVisibility(View.GONE);
+        contentLayout.setVisibility(View.GONE);
+        userLayout.setVisibility(View.GONE);
+        SharedPreferences sharedPreferences = this.getPreferences(Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.remove(FIRSTNAME);
+        editor.putBoolean(LOGGED_IN, false);
+        editor.apply();
+
     }
 }
