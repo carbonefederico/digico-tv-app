@@ -31,6 +31,7 @@ import org.json.JSONObject;
  */
 public class MainActivity extends FragmentActivity {
 
+    private final static String TAG = "MainActivity";
     private final String FIRSTNAME = "firstname";
     private final String LOGGED_IN = "loggedIn";
 
@@ -46,29 +47,22 @@ public class MainActivity extends FragmentActivity {
         contentLayout = (FrameLayout ) findViewById(R.id.contentFrame);
         userLayout = (FrameLayout ) findViewById(R.id.userFrame);
         Button startButton = (Button) findViewById(R.id.startButton);
-        startButton.setOnClickListener(new View.OnClickListener() {
-           
-           @Override
-           public void onClick(View v) {
-               startLayout.setVisibility(View.GONE);
-               loadWebView();
-               loginLayout.setVisibility(View.VISIBLE);
-           }
-       });
+        startButton.setOnClickListener(this::start);
         Button logoutButton = (Button) findViewById(R.id.logoutButton);
-        logoutButton.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                logoutUser();
-            }
-        });
-
+        logoutButton.setOnClickListener(this::logoutUser);
 
         SharedPreferences sharedPreferences = this.getPreferences(Context.MODE_PRIVATE);
         if(sharedPreferences.getBoolean(LOGGED_IN, false)) {
-            logInUser(sharedPreferences.getString (FIRSTNAME, ""));
+            String user = sharedPreferences.getString (FIRSTNAME, "");
+            Log.i(TAG, "User already logged in " + user);
+            logInUser(user);
         }
+    }
+
+    private void start (View view) {
+        startLayout.setVisibility(View.GONE);
+        loadWebView();
+        loginLayout.setVisibility(View.VISIBLE);
     }
 
     private void loadWebView() {
@@ -87,7 +81,7 @@ public class MainActivity extends FragmentActivity {
 
     @JavascriptInterface
     public void handleLoginResponse(String payload) throws JSONException {
-        Log.i("Main", payload);
+        Log.i("TAG", payload);
 
         runOnUiThread(new Runnable() {
             @Override
@@ -98,6 +92,7 @@ public class MainActivity extends FragmentActivity {
     }
 
     private void logInUser(String firstName) {
+        Log.i("TAG", "logInUser " + firstName);
         TextView emailText = (TextView) findViewById(R.id.emailText);
         emailText.setText(firstName);
         loginLayout.setVisibility(View.GONE);
@@ -111,7 +106,8 @@ public class MainActivity extends FragmentActivity {
         editor.apply();
     }
 
-    private void logoutUser () {
+    private void logoutUser (View view) {
+        Log.i("TAG", "logoutUser");
         startLayout.setVisibility(View.VISIBLE);
         loginLayout.setVisibility(View.GONE);
         contentLayout.setVisibility(View.GONE);
